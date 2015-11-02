@@ -5,6 +5,7 @@ using Xamarin.Forms;
 using Prism.Common;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Prism.Navigation
 {
@@ -70,6 +71,58 @@ namespace Prism.Navigation
             }
             else
                 Debug.WriteLine("Navigation ERROR: {0} not found. Make sure you have registered {0} for navigation.", name);
+        }
+        public Task<NavigationParameters> NavigateAndWait<T>(NavigationParameters parameters = null, bool useModalNavigation = true, bool animated = true)
+        {
+            return NavigateAndWait(typeof(T).FullName, parameters, useModalNavigation, animated);
+        }
+        public Task<NavigationParameters> NavigateAndWait(string name, NavigationParameters parameters = null,
+            bool useModalNavigation = true, bool animated = true)
+        {
+            var source = new TaskCompletionSource<NavigationParameters>();
+            var targetView = ServiceLocator.Current.GetInstance<object>(name) as Page;
+            if (targetView != null)
+            {
+                var navigation = GetPageNavigation();
+
+                if (!CanNavigate(_page, parameters))
+                    return null;
+
+                Page navigationPageFromProvider = GetNavigationPageFromProvider(_page, targetView);
+
+                OnNavigatedFrom(_page, parameters);
+                var target = (navigationPageFromProvider != null ? navigationPageFromProvider : targetView);
+
+                target.Disappearing += (sender, args) =>
+                {
+                    var navigationParameters = GetNavigationParameters(target);
+                    source.SetResult(navigationParameters);
+                };
+                DoPush(navigation, target, useModalNavigation, animated);
+
+
+                OnNavigatedTo(targetView, parameters);
+            }
+            else
+                Debug.WriteLine("Navigation ERROR: {0} not found. Make sure you have registered {0} for navigation.", name);
+            return source.Task;
+        }
+
+        private static NavigationParameters GetNavigationParameters(object item)
+        {
+            var navigationAndWaitParameterProvider = item as INavigationAndWaitParameterProvider;
+            if (navigationAndWaitParameterProvider != null)
+                return navigationAndWaitParameterProvider.Provide();
+
+            var bindableObject = item as BindableObject;
+            if (bindableObject != null)
+            {
+                var navigationAndWaitParameterProviderBindingContext = bindableObject.BindingContext as INavigationAndWaitParameterProvider;
+                if (navigationAndWaitParameterProviderBindingContext != null)
+                    return navigationAndWaitParameterProviderBindingContext.Provide();
+            }
+
+            return null;
         }
 
         private async static void DoPush(INavigation navigation, Page view, bool useModalNavigation, bool animated)
