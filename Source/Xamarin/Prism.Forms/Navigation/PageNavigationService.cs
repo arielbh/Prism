@@ -92,14 +92,16 @@ namespace Prism.Navigation
 
                 OnNavigatedFrom(_page, parameters);
                 var target = (navigationPageFromProvider != null ? navigationPageFromProvider : targetView);
-
-                target.Disappearing += (sender, args) =>
+                EventHandler handler = null;
+                handler = (sender, args) =>
                 {
+                    target.Disappearing -= handler;
                     var navigationParameters = GetNavigationParameters(target);
                     source.SetResult(navigationParameters);
                 };
-                DoPush(navigation, target, useModalNavigation, animated);
 
+                target.Disappearing += handler;
+                DoPush(navigation, target, useModalNavigation, animated);
 
                 OnNavigatedTo(targetView, parameters);
             }
