@@ -62,7 +62,7 @@ namespace Prism
 
 		public virtual void OnPlatformBackNavigation()
 		{
-			NavigationService.HandlePlatformBackNavigation ();
+			//NavigationService.HandlePlatformBackNavigation ();
 		}
     }
 }

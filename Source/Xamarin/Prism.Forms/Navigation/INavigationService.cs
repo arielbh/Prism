@@ -48,7 +48,12 @@ namespace Prism.Navigation
         Task Navigate(string name, NavigationParameters parameters = null, bool? useModalNavigation = null, bool animated = true);
 
 
-		void HandlePlatformBackNavigation();
 
     }
+
+	public interface NavigationServicePlatformIntegration
+	{
+		void HandlePlatformBackNavigation();
+
+	}
 }

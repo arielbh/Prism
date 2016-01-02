@@ -11,7 +11,9 @@ namespace Prism.Forms.Android
 		{
 			_application = application;
 			activity.OnBackButtonEvent += Activity_OnBackButtonEvent;
+
 		}
+
 
 		static void Activity_OnBackButtonEvent ()
 		{
